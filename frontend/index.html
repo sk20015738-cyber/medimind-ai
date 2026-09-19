@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MediMind AI | 스마트 AI 복약 관리 & 알림 시스템</title>
+  <meta name="description" content="AI 기반 정밀 복약 스케줄링, 시간치료학(Chronotherapy) 맞춤 타이밍, 한국형 DUR 약물 상호작용 검사 및 시니어 맞춤형 스마트 복약 도우미">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Accessibility skip link -->
+  <a href="#mainContent" class="skip-link">본문 바로가기</a>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand-area">
+        <div class="logo-badge">
+          <span class="logo-icon">💊</span>
+          <span class="pulse-indicator"></span>
+        </div>
+        <div class="brand-text">
+          <div class="brand-title-row">
+            <h1 class="brand-title">MediMind <span class="ai-gradient">AI</span></h1>
+            <span class="service-badge">스마트 복약 케어</span>
+          </div>
+          <p class="brand-subtitle">시간치료학 맞춤 스케줄링 & DUR 안전 검사</p>
+        </div>
+      </div>
+
+      <!-- Live Clock & Date -->
+      <div class="header-center-info" aria-live="polite">
+        <div class="date-display" id="currentDateDisplay">2026년 9월 10일 목요일</div>
+        <div class="live-clock" id="liveClockDisplay">01:18:04</div>
+      </div>
+
+      <!-- Header Action Controls -->
+      <div class="header-controls">
+        <!-- Adherence Streak Badge -->
+        <div class="streak-badge" id="headerStreakBadge" title="연속 복약 달성 일수">
+          <span class="streak-flame">🔥</span>
+          <span class="streak-text" id="headerStreakText">7일 연속 복용 중</span>
+        </div>
+
+        <!-- Audio Voice Test Button -->
+        <button type="button" class="ctrl-btn audio-test-btn" id="audioTestBtn" title="알림음 및 음성 안내 테스트" aria-label="알림음 및 음성 안내 테스트">
+          <span class="btn-icon">🔊</span>
+          <span class="btn-label">소리 테스트</span>
+        </button>
+
+        <!-- Senior Mode Toggle -->
+        <div class="senior-toggle-wrapper" title="어르신을 위한 큰 글씨 및 고대비 화면 모드">
+          <label class="toggle-switch" for="seniorModeToggle">
+            <input type="checkbox" id="seniorModeToggle" aria-label="고대비 큰글씨 모드 전환">
+            <span class="switch-slider"></span>
+          </label>
+          <span class="toggle-label" id="seniorToggleLabel">고대비·큰글씨</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main id="mainContent" class="main-layout">
+    
+    <!-- Top Global Safety Alert Banner (Dynamic) -->
+    <div class="safety-banner-wrapper" id="globalSafetyBannerWrapper">
+      <div class="safety-banner warning-card" id="globalSafetyBanner">
+        <div class="alert-icon-col">
+          <span class="alert-pulse-icon">⚠️</span>
+        </div>
+        <div class="alert-content-col">
+          <div class="alert-heading-row">
+            <strong class="alert-title">DUR 복약 안전 경고 감지</strong>
+            <span class="alert-badge major">병용/상호작용 주의</span>
+          </div>
+          <p class="alert-message" id="safetyBannerMessage">
+            현재 복용 중인 약물 중 <strong>식품-약물 상호작용</strong> 또는 <strong>중복 투약 위험</strong>이 있습니다. 복용 전 주의사항을 꼭 확인하세요.
+          </p>
+        </div>
+        <div class="alert-action-col">
+          <button type="button" class="btn btn-outline-warning btn-sm" id="viewDurDetailsBtn">상세 확인</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hero Next Dose Card -->
+    <section class="next-dose-section" aria-labelledby="nextDoseHeading">
+      <div class="hero-dose-card" id="nextDoseCard">
+        <div class="hero-top-bar">
+          <div class="schedule-status-tag">
+            <span class="clock-icon">⏳</span>
+            <span class="status-title" id="nextDoseHeading">다음 예정된 복약</span>
+            <span class="slot-chip" id="heroTimeSlotChip">점심 복약</span>
+          </div>
+          <div class="hero-badge live-pulse-badge">
+            <span class="pulse-dot"></span>
+            <span>실시간 타이머 가동 중</span>
+          </div>
+        </div>
+
+        <div class="hero-main-grid">
+          <div class="hero-countdown-box">
+            <span class="countdown-label">다음 복약 시간까지</span>
+            <div class="countdown-timer" id="heroCountdownDisplay" aria-live="assertive">
+              <div class="time-block"><span class="number" id="cdHours">00</span><span class="unit">시간</span></div>
+              <span class="time-colon">:</span>
+              <div class="time-block"><span class="number" id="cdMinutes">24</span><span class="unit">분</span></div>
+              <span class="time-colon">:</span>
+              <div class="time-block"><span class="number" id="cdSeconds">15</span><span class="unit">초</span></div>
+            </div>
+            <div class="scheduled-time-info">
+              예정 시각: <strong id="heroScheduledTimeText">오후 12:30</strong>
+            </div>
+          </div>
+
+          <div class="hero-medication-detail">
+            <div class="pill-title-row">
+              <div class="pill-avatar" id="heroPillAvatar">💊</div>
+              <div class="pill-meta-info">
+                <div class="name-dose">
+                  <h2 class="med-name" id="heroMedName">노바스크정</h2>
+                  <span class="med-dose-badge" id="heroMedDose">5mg</span>
+                </div>
+                <p class="med-category" id="heroMedCategory">칼슘채널차단제 · 혈압강하제</p>
+              </div>
+            </div>
+
+            <div class="instruction-list">
+              <div class="inst-item">
+                <span class="inst-icon">🍽️</span>
+                <span class="inst-text" id="heroMealRelation">점심 식후 30분 복용</span>
+              </div>
+              <div class="inst-item">
+                <span class="inst-icon">💧</span>
+                <span class="inst-text" id="heroWaterGuide">미온수 1컵(200ml)과 함께 복용</span>
+              </div>
+              <div class="inst-item chronotherapy-tip" id="heroChronoTipBox">
+                <span class="inst-icon">💡</span>
+                <span class="inst-text" id="heroChronoTip">시간치료학 가이드: 혈압 변동을 완만하게 유지하기 위해 매일 일정한 시간에 복용하세요.</span>
+              </div>
+            </div>
+
+            <!-- Quick Action 3-Buttons -->
+            <div class="hero-action-buttons">
+              <button type="button" class="hero-btn take-btn" id="heroTakeBtn" aria-label="복용 완료 처리">
+                <span class="btn-big-icon">✔️</span>
+                <div class="btn-text-group">
+                  <span class="btn-main-text">복용 완료</span>
+                  <span class="btn-sub-text">지금 약 먹었어요</span>
+                </div>
+              </button>
+
+              <button type="button" class="hero-btn snooze-btn" id="heroSnoozeBtn" aria-label="10분 후 알림">
+                <span class="btn-big-icon">⏰</span>
+                <div class="btn-text-group">
+                  <span class="btn-main-text">10분 후 알림</span>
+                  <span class="btn-sub-text">잠시 후 다시 알림</span>
+                </div>
+              </button>
+
+              <button type="button" class="hero-btn skip-btn" id="heroSkipBtn" aria-label="이번 복약 건너뛰기">
+                <span class="btn-big-icon">⏭️</span>
+                <div class="btn-text-group">
+                  <span class="btn-main-text">건너뛰기</span>
+                  <span class="btn-sub-text">사유 기록 후 스킵</span>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick Action Tool Bar -->
+    <section class="quick-tools-section" aria-label="주요 기능 바로가기">
+      <div class="tools-grid">
+        <button type="button" class="tool-card-btn primary-tool" id="openScannerBtn">
+          <div class="tool-icon-circle">📷</div>
+          <div class="tool-info">
+            <span class="tool-title">AI 처방전 · 약봉투 스캔</span>
+            <span class="tool-desc">텍스트나 사진으로 원클릭 스케줄 자동등록</span>
+          </div>
+          <span class="tool-arrow">→</span>
+        </button>
+
+        <button type="button" class="tool-card-btn secondary-tool" id="openManualAddBtn">
+          <div class="tool-icon-circle">➕</div>
+          <div class="tool-info">
+            <span class="tool-title">약물 직접 등록</span>
+            <span class="tool-desc">복용 중인 영양제나 처방약 간편 입력</span>
+          </div>
+          <span class="tool-arrow">→</span>
+        </button>
+
+        <button type="button" class="tool-card-btn dur-tool" id="openDurModalBtn">
+          <div class="tool-icon-circle">🛡️</div>
+          <div class="tool-info">
+            <span class="tool-title">DUR 안전성 검사</span>
+            <span class="tool-desc">약물 상호작용 & 음식 충돌 검사 리포트</span>
+          </div>
+          <span class="tool-badge-alert" id="durBadgeAlert">주의 2건</span>
+        </button>
+
+        <button type="button" class="tool-card-btn chat-tool" id="openChatBtn">
+          <div class="tool-icon-circle">💬</div>
+          <div class="tool-info">
+            <span class="tool-title">AI 약사 실시간 상담</span>
+            <span class="tool-desc">놓친 약 복용법, 부작용, 상호작용 질문</span>
+          </div>
+          <span class="tool-arrow">→</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Daily Medication Timeline Section -->
+    <section class="timeline-section" aria-labelledby="timelineHeading">
+      <div class="section-header-row">
+        <div>
+          <h2 class="section-heading" id="timelineHeading">오늘의 복약 일정표</h2>
+          <p class="section-subheading">시간대별(아침 · 점심 · 저녁 · 취침 전) 맞춤 복약 타임라인</p>
+        </div>
+        <div class="timeline-filters">
+          <button type="button" class="filter-chip active" data-filter="all">전체 일정</button>
+          <button type="button" class="filter-chip" data-filter="morning">🌅 아침</button>
+          <button type="button" class="filter-chip" data-filter="noon">☀️ 점심</button>
+          <button type="button" class="filter-chip" data-filter="evening">🌆 저녁</button>
+          <button type="button" class="filter-chip" data-filter="bedtime">🌙 취침전</button>
+        </div>
+      </div>
+
+      <!-- Timeline 4 Slot Columns / Blocks -->
+      <div class="timeline-grid" id="timelineGrid">
+        
+        <!-- Slot: Morning -->
+        <div class="time-slot-column" data-slot="morning">
+          <div class="slot-header morning-header">
+            <div class="slot-header-left">
+              <span class="slot-emoji">🌅</span>
+              <div>
+                <h3 class="slot-title">아침 복약</h3>
+                <span class="slot-hours">07:00 ~ 08:30</span>
+              </div>
+            </div>
+            <span class="slot-count" id="countMorning">2개 약물</span>
+          </div>
+          <div class="cards-container" id="cardsMorning">
+            <!-- Dynamic Injection -->
+          </div>
+        </div>
+
+        <!-- Slot: Noon -->
+        <div class="time-slot-column" data-slot="noon">
+          <div class="slot-header noon-header">
+            <div class="slot-header-left">
+              <span class="slot-emoji">☀️</span>
+              <div>
+                <h3 class="slot-title">점심 복약</h3>
+                <span class="slot-hours">12:00 ~ 13:30</span>
+              </div>
+            </div>
+            <span class="slot-count" id="countNoon">1개 약물</span>
+          </div>
+          <div class="cards-container" id="cardsNoon">
+            <!-- Dynamic Injection -->
+          </div>
+        </div>
+
+        <!-- Slot: Evening -->
+        <div class="time-slot-column" data-slot="evening">
+          <div class="slot-header evening-header">
+            <div class="slot-header-left">
+              <span class="slot-emoji">🌆</span>
+              <div>
+                <h3 class="slot-title">저녁 복약</h3>
+                <span class="slot-hours">18:30 ~ 20:00</span>
+              </div>
+            </div>
+            <span class="slot-count" id="countEvening">2개 약물</span>
+          </div>
+          <div class="cards-container" id="cardsEvening">
+            <!-- Dynamic Injection -->
+          </div>
+        </div>
+
+        <!-- Slot: Bedtime -->
+        <div class="time-slot-column" data-slot="bedtime">
+          <div class="slot-header bedtime-header">
+            <div class="slot-header-left">
+              <span class="slot-emoji">🌙</span>
+              <div>
+                <h3 class="slot-title">취침 전 복약</h3>
+                <span class="slot-hours">21:30 ~ 22:30</span>
+              </div>
+            </div>
+            <span class="slot-count" id="countBedtime">1개 약물</span>
+          </div>
+          <div class="cards-container" id="cardsBedtime">
+            <!-- Dynamic Injection -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Adherence Analytics Section -->
+    <section class="analytics-section" aria-labelledby="analyticsHeading">
+      <div class="section-header-row">
+        <div>
+          <h2 class="section-heading" id="analyticsHeading">복약 순응도 & 주간 리포트</h2>
+          <p class="section-subheading">정기적인 복약은 만성질환 합병증을 68% 이상 예방합니다.</p>
+        </div>
+        <button type="button" class="btn btn-outline report-export-btn" id="openReportModalBtn">
+          <span class="btn-icon">📄</span>
+          <span>의사용 복약 보고서 출력</span>
+        </button>
+      </div>
+
+      <div class="analytics-cards-grid">
+        <!-- Circular Progress Ring Card -->
+        <div class="analytics-card progress-card">
+          <h3 class="card-subtitle">이번 주 복약 순응도</h3>
+          <div class="gauge-wrapper">
+            <div class="circular-progress" id="adherenceGauge">
+              <svg viewBox="0 0 160 160" class="gauge-svg">
+                <circle class="gauge-bg" cx="80" cy="80" r="70"></circle>
+                <circle class="gauge-fill" id="gaugeProgressCircle" cx="80" cy="80" r="70" stroke-dasharray="440" stroke-dashoffset="44"></circle>
+              </svg>
+              <div class="gauge-inner-text">
+                <span class="gauge-percent" id="adherencePercentText">92%</span>
+                <span class="gauge-label">우수 (Good)</span>
+              </div>
+            </div>
+          </div>
+          <p class="gauge-desc" id="adherenceSummaryDesc">
+            이번 주 총 28회 복약 중 <strong>26회 완료</strong>, 2회 지연 복용하였습니다.
+          </p>
+        </div>
+
+        <!-- Weekly 7-Day History Track -->
+        <div class="analytics-card weekly-history-card">
+          <div class="card-title-between">
+            <h3 class="card-subtitle">최근 7일간 복약 실천 기록</h3>
+            <span class="history-range-label">최근 7일 기준</span>
+          </div>
+          <div class="weekly-track-grid" id="weeklyTrackGrid">
+            <!-- Day Columns generated by JS -->
+          </div>
+          <div class="track-legend">
+            <span class="legend-item"><span class="legend-dot perfect"></span> 완벽 복용</span>
+            <span class="legend-item"><span class="legend-dot partial"></span> 일부 복용</span>
+            <span class="legend-item"><span class="legend-dot missed"></span> 미복용</span>
+          </div>
+        </div>
+
+        <!-- Adherence Insights & Advice Card -->
+        <div class="analytics-card insights-card">
+          <h3 class="card-subtitle">AI 복약 코칭 인사이트</h3>
+          <ul class="insights-list">
+            <li class="insight-item">
+              <span class="insight-badge success">칭찬</span>
+              <p>아침 혈압약은 지난 14일 동안 결석 없이 완벽하게 복용 중입니다!</p>
+            </li>
+            <li class="insight-item">
+              <span class="insight-badge tip">개선 팁</span>
+              <p>저녁 시간대 복약이 평균 35분 지연되는 경향이 있습니다. 알림 시간을 저녁 식사 직후로 15분 당겨보세요.</p>
+            </li>
+            <li class="insight-item">
+              <span class="insight-badge dur">DUR 안심</span>
+              <p>중복 성분 없이 안전한 처방 조합을 유지하고 있습니다.</p>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== MODALS & DRAWERS ==================== -->
+
+  <!-- 1. AI Prescription Scanner Modal -->
+  <div class="modal-backdrop" id="prescriptionModal" role="dialog" aria-modal="true" aria-labelledby="scanModalTitle">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-badge-icon">📷</span>
+          <div>
+            <h2 class="modal-title" id="scanModalTitle">AI 처방전 · 약봉투 자동 스캐너</h2>
+            <p class="modal-desc">처방 텍스트나 영수증 약봉투 사진을 분석하여 시간치료학에 맞는 복약 스케줄을 자동으로 생성합니다.</p>
+          </div>
+        </div>
+        <button type="button" class="close-btn" id="closePrescriptionModalBtn" aria-label="닫기">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Sample Presets Chips -->
+        <div class="preset-section">
+          <label class="input-label">원클릭 예시 처방전 불러오기:</label>
+          <div class="preset-chips-list">
+            <button type="button" class="preset-chip" data-preset="cold">
+              🤧 감기몸살약 처방 (타이레놀+항히스타민+진해거담제)
+            </button>
+            <button type="button" class="preset-chip" data-preset="chronic">
+              ❤️ 만성질환 (노바스크+메트포르민+아토르바스타틴)
+            </button>
+            <button type="button" class="preset-chip" data-preset="pain">
+              🩹 관절염 소염진통제 (이부프로펜+소화제)
+            </button>
+          </div>
+        </div>
+
+        <!-- Prescription Text Area -->
+        <div class="form-group">
+          <label for="prescriptionInput" class="input-label">
+            처방전 텍스트 입력 또는 OCR 인식 결과
+          </label>
+          <textarea id="prescriptionInput" class="form-textarea" rows="4" placeholder="예시:
+타이레놀정 500mg 하루 3회 식후 30분 3일분
+노바스크정 5mg 1일 1회 아침 식후 1정
+아토르바스타틴정 20mg 1일 1회 취침전 1정"></textarea>
+        </div>
+
+        <!-- File Upload Area (Simulating OCR) -->
+        <div class="form-group">
+          <label class="input-label">약봉투 / 처방전 사진 업로드 (스마트폰 사진 지원)</label>
+          <div class="dropzone-area" id="ocrDropzone">
+            <input type="file" id="prescriptionFileInput" accept="image/*" class="file-input-hidden">
+            <div class="dropzone-content" id="dropzoneContent">
+              <span class="upload-icon">📸</span>
+              <p class="drop-text">처방전 이미지를 여기에 끌어다 놓거나 <strong class="highlight-text">파일 찾아보기</strong></p>
+              <span class="drop-sub">JPG, PNG, WebP 지원 (최대 10MB)</span>
+            </div>
+            <!-- Image preview slot -->
+            <div class="image-preview-box hidden" id="imagePreviewBox">
+              <img id="imagePreviewEl" src="" alt="처방전 미리보기">
+              <button type="button" class="preview-remove-btn" id="removePreviewBtn">사진 지우기</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- OCR Scanning Progress bar -->
+        <div class="ocr-progress-container hidden" id="ocrProgressContainer">
+          <div class="progress-bar-wrapper">
+            <div class="progress-fill-bar" id="ocrProgressBar"></div>
+          </div>
+          <p class="progress-status-text" id="ocrProgressText">AI가 처방전의 약품명과 복약 용량을 판독하는 중입니다... (75%)</p>
+        </div>
+
+        <!-- AI Parsed Results Preview -->
+        <div class="parsed-results-box hidden" id="parsedResultsBox">
+          <div class="parsed-header">
+            <span class="parsed-check">✅</span>
+            <strong>AI 분석 완료된 약물 목록</strong>
+          </div>
+          <div class="parsed-items-list" id="parsedItemsList">
+            <!-- Parsed pill cards inserted here -->
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="cancelPrescriptionBtn">취소</button>
+        <button type="button" class="btn btn-primary" id="submitPrescriptionBtn">
+          <span class="btn-icon">✨</span>
+          <span>AI 처방전 분석 및 스케줄 자동등록</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Manual Add Medication Modal -->
+  <div class="modal-backdrop" id="manualAddModal" role="dialog" aria-modal="true" aria-labelledby="manualModalTitle">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-badge-icon">💊</span>
+          <div>
+            <h2 class="modal-title" id="manualModalTitle">약물 직접 추가</h2>
+            <p class="modal-desc">새로운 처방약이나 영양제를 복약 일정에 등록합니다.</p>
+          </div>
+        </div>
+        <button type="button" class="close-btn" id="closeManualAddModalBtn" aria-label="닫기">✕</button>
+      </div>
+
+      <form id="manualAddForm">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="manualMedName" class="input-label required">약물명</label>
+            <input type="text" id="manualMedName" class="form-input" placeholder="예: 타이레놀정, 오메가3, 노바스크" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-6">
+              <label for="manualDosage" class="input-label required">1회 복용량</label>
+              <input type="text" id="manualDosage" class="form-input" placeholder="예: 500mg 1정" required>
+            </div>
+            <div class="form-group col-6">
+              <label for="manualCategory" class="input-label">약물 분류</label>
+              <input type="text" id="manualCategory" class="form-input" placeholder="예: 진통제, 혈압약">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="input-label required">복약 시간대 (중복 선택 가능)</label>
+            <div class="slot-checkbox-group">
+              <label class="slot-checkbox-item">
+                <input type="checkbox" name="timeSlots" value="morning" checked>
+                <span>🌅 아침 (08:00)</span>
+              </label>
+              <label class="slot-checkbox-item">
+                <input type="checkbox" name="timeSlots" value="noon">
+                <span>☀️ 점심 (12:30)</span>
+              </label>
+              <label class="slot-checkbox-item">
+                <input type="checkbox" name="timeSlots" value="evening">
+                <span>🌆 저녁 (19:00)</span>
+              </label>
+              <label class="slot-checkbox-item">
+                <input type="checkbox" name="timeSlots" value="bedtime">
+                <span>🌙 취침전 (22:00)</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="manualMealRelation" class="input-label required">식사 관계</label>
+            <select id="manualMealRelation" class="form-select">
+              <option value="식후 30분" selected>식후 30분</option>
+              <option value="식사 직후">식사 직후 (위장 보호)</option>
+              <option value="식전 30분">식전 30분 (흡수율 증가)</option>
+              <option value="공복">공복 (기상 직후 미온수)</option>
+              <option value="취침 전">취침 전 (야간 콜레스테롤/위산 억제)</option>
+              <option value="식사 무관">식사 무관 (시간 엄수)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="manualInstructions" class="input-label">주의사항 및 메모</label>
+            <textarea id="manualInstructions" class="form-textarea" rows="2" placeholder="예: 충분한 물과 함께 복용, 자몽주스 섭취 금지"></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="cancelManualAddBtn">취소</button>
+          <button type="submit" class="btn btn-primary">
+            <span>스케줄에 등록하기</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. DUR Safety Check Modal -->
+  <div class="modal-backdrop" id="durModal" role="dialog" aria-modal="true" aria-labelledby="durModalTitle">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-badge-icon warning">🛡️</span>
+          <div>
+            <h2 class="modal-title" id="durModalTitle">DUR 약물 상호작용 & 식품 안전성 정밀 검사</h2>
+            <p class="modal-desc">식약처 DUR 데이터베이스 및 임상 약학 가이드라인 기준 종합 분석 결과입니다.</p>
+          </div>
+        </div>
+        <button type="button" class="close-btn" id="closeDurModalBtn" aria-label="닫기">✕</button>
+      </div>
+
+      <div class="modal-body" id="durModalBody">
+        <!-- Dynamic DUR warnings list inserted via JS -->
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="confirmDurBtn">확인했습니다</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. AI Pharmacist Consultation Drawer -->
+  <aside class="chat-drawer" id="chatDrawer" role="dialog" aria-modal="true" aria-labelledby="chatDrawerTitle">
+    <div class="drawer-header">
+      <div class="drawer-header-left">
+        <div class="pharmacist-avatar">👩‍⚕️</div>
+        <div>
+          <h2 class="drawer-title" id="chatDrawerTitle">AI 전문 약사 상담</h2>
+          <span class="online-indicator">● 24시간 실시간 복약 가이드 대기 중</span>
+        </div>
+      </div>
+      <button type="button" class="close-btn" id="closeChatDrawerBtn" aria-label="상담창 닫기">✕</button>
+    </div>
+
+    <!-- Suggested Quick FAQ Chips -->
+    <div class="faq-chips-container">
+      <span class="faq-label">자주 묻는 질문:</span>
+      <div class="faq-pills-scroll">
+        <button type="button" class="faq-pill" data-question="약 먹는 시간 놓쳤을 때 어떻게 하나요?">
+          ❓ 약 복용 시간 놓쳤을 때 (1/2 골든룰)
+        </button>
+        <button type="button" class="faq-pill" data-question="타이레놀과 감기약 같이 먹어도 되나요?">
+          ⚠️ 타이레놀과 감기약 동시 복용
+        </button>
+        <button type="button" class="faq-pill" data-question="혈압약 먹을 때 자몽주스 마셔도 되나요?">
+          🍊 혈압약과 자몽주스 상호작용
+        </button>
+        <button type="button" class="faq-pill" data-question="철분제는 우유나 커피랑 먹어도 되나요?">
+          🥛 철분제와 우유/커피 섭취
+        </button>
+      </div>
+    </div>
+
+    <!-- Chat Messages Container -->
+    <div class="chat-messages-area" id="chatMessagesArea" aria-live="polite">
+      <!-- Default Greeting Bubble -->
+      <div class="message-row ai-row">
+        <div class="msg-avatar">👩‍⚕️</div>
+        <div class="msg-bubble-group">
+          <div class="msg-bubble ai-bubble">
+            안녕하세요! <strong>MediMind AI 전담 약사</strong>입니다.<br>
+            현재 등록하신 약물의 복용 타이밍, 음식 궁합, 부작용 대처법, 또는 놓친 약 복용 가이드에 대해 무엇이든 편하게 물어보세요.
+          </div>
+          <span class="msg-time">방금 전</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Typing Indicator -->
+    <div class="typing-indicator-row hidden" id="typingIndicator">
+      <div class="msg-avatar">👩‍⚕️</div>
+      <div class="typing-dots">
+        <span></span><span></span><span></span>
+      </div>
+      <span class="typing-text">AI 약사가 전문 복약 지식을 분석하고 있습니다...</span>
+    </div>
+
+    <!-- Chat Input Form -->
+    <form class="chat-input-bar" id="chatForm">
+      <input type="text" id="chatInput" class="chat-input" placeholder="약물 복용이나 부작용에 대해 질문하세요..." autocomplete="off">
+      <button type="submit" class="chat-send-btn" id="chatSendBtn" aria-label="메시지 전송">
+        <span>전송</span>
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+        </svg>
+      </button>
+    </form>
+  </aside>
+
+  <!-- 5. Doctor Consultation Printable Report Modal -->
+  <div class="modal-backdrop" id="reportModal" role="dialog" aria-modal="true" aria-labelledby="reportModalTitle">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-badge-icon">📋</span>
+          <div>
+            <h2 class="modal-title" id="reportModalTitle">의사용 복약 순응도 & 임상 상담 리포트</h2>
+            <p class="modal-desc">진료 및 처방 시 의사·약사에게 제시할 수 있는 공식 규격 복약 이력 문서입니다.</p>
+          </div>
+        </div>
+        <button type="button" class="close-btn" id="closeReportModalBtn" aria-label="닫기">✕</button>
+      </div>
+
+      <div class="modal-body printable-report-body" id="printableReportContent">
+        <!-- Printable Document Markup -->
+        <div class="clinical-report-sheet">
+          <header class="sheet-header">
+            <div class="sheet-title-left">
+              <h2>환자 복약 순응도 및 이행 평가서</h2>
+              <span class="sheet-sub">Patient Medication Adherence & Clinical Consultation Report</span>
+            </div>
+            <div class="sheet-meta-right">
+              <p><strong>발행일시:</strong> <span id="reportIssueDate">2026-09-10</span></p>
+              <p><strong>환자 성명:</strong> 홍길동 (남, 68세)</p>
+              <p><strong>대상 기간:</strong> 최근 30일 복약 기록</p>
+            </div>
+          </header>
+
+          <section class="sheet-section summary-stats-grid">
+            <div class="stat-box">
+              <span class="stat-num color-teal" id="reportAdherenceRate">92%</span>
+              <span class="stat-lbl">전체 복약 순응도 (우수)</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-num color-blue" id="reportTotalScheduled">90회</span>
+              <span class="stat-lbl">총 스케줄 횟수</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-num color-green" id="reportTotalTaken">83회</span>
+              <span class="stat-lbl">정상 복용 완료</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-num color-amber" id="reportTotalSnoozed">5회</span>
+              <span class="stat-lbl">지연 복용 (스누즈)</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-num color-red" id="reportTotalSkipped">2회</span>
+              <span class="stat-lbl">건너뜀 (사유: 속쓰림 등)</span>
+            </div>
+          </section>
+
+          <section class="sheet-section">
+            <h3 class="sheet-heading">1. 현재 활성 처방 약물 목록 (Active Medications)</h3>
+            <table class="report-table" id="reportMedTable">
+              <thead>
+                <tr>
+                  <th>약물명</th>
+                  <th>1회 용량</th>
+                  <th>복약 시간대</th>
+                  <th>용법/조건</th>
+                  <th>DUR 모니터링 주의사항</th>
+                </tr>
+              </thead>
+              <tbody id="reportMedTableBody">
+                <!-- Dynamically filled -->
+              </tbody>
+            </table>
+          </section>
+
+          <section class="sheet-section">
+            <h3 class="sheet-heading">2. 시간치료학(Chronotherapy) 및 DUR 상호작용 검토 의견</h3>
+            <div class="doctor-comment-box" id="reportDurComment">
+              <p><strong>• 혈압약(노바스크정):</strong> 아침 08:00 복용으로 주간 혈압 조절 양호. 자몽 섭취 제한 환자 교육 완료.</p>
+              <p><strong>• 당뇨약(메트포르민):</strong> 위장장애 방지를 위해 식사 직후 복용 준수율 95% 기록.</p>
+              <p><strong>• 고지혈증약(아토르바스타틴):</strong> 간내 콜레스테롤 합성 저해 극대화를 위해 22:00 취침 전 복용 최적화됨.</p>
+            </div>
+          </section>
+
+          <footer class="sheet-footer">
+            <p>※ 본 문서는 MediMind AI 복약 모니터링 시스템에서 공공의약품 데이터베이스 및 사용자 복용 로그를 바탕으로 생성된 임상 참고용 자료입니다.</p>
+            <div class="doctor-sign-line">
+              <span>담당 의료진 확인 서명: ____________________ (인)</span>
+            </div>
+          </footer>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="closeReportFooterBtn">닫기</button>
+        <button type="button" class="btn btn-primary" id="printReportBtn">
+          <span class="btn-icon">🖨️</span>
+          <span>보고서 인쇄 / PDF 저장</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer" aria-live="assertive" aria-atomic="true"></div>
+
+  <!-- App Footer -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <div class="footer-left">
+        <p class="footer-copyright">© 2026 <strong>MediMind AI</strong>. 스마트 의약 안전 복약 관리 시스템.</p>
+        <p class="footer-disclaimer">
+          ⚠️ 안내: 본 서비스의 복약 알림 및 상호작용 정보는 건강 보조 목적이며, 의사의 진단이나 전문 약사의 복약지도를 대신할 수 없습니다. 응급 상황 시 즉시 119 또는 인근 응급의료센터를 방문하세요.
+        </p>
+      </div>
+      <div class="footer-right">
+        <span class="footer-tech-tag">HTML5 · CSS3 · ES6+ Web Audio & Speech</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -21,8 +21,8 @@
      1. Constants & Configuration
      ========================================================================== */
   const STORAGE_KEYS = {
-    MEDICATIONS: 'medimind_medications_v1',
-    LOGS: 'medimind_logs_v1',
+    MEDICATIONS: 'medimind_medications_v2',
+    LOGS: 'medimind_logs_v2',
     SENIOR_MODE: 'medimind_senior_mode_v1',
     STREAK: 'medimind_streak_v1'
   };
@@ -47,13 +47,13 @@
   const DEFAULT_MEDICATIONS = [
     {
       id: 'med-novasc',
-      name: '노바스크정 (암로디핀)',
+      name: '나종남의 감기약(새천년 약국)',
       dosage: '5mg 1정',
-      category: '혈압약 (칼슘채널차단제)',
+      category: '처방 감기약',
       slots: ['morning'],
       mealRelation: '식후 30분',
-      instructions: '매일 아침 규칙적으로 복용. 자몽 및 자몽주스 섭취 금지',
-      chronotherapyTip: '혈압약은 아침에 복용하여 일과 중 혈압 급상승(Morning Surge)을 예방합니다.',
+      instructions: '매일 아침 식후 미온수(200ml)와 함께 규칙적으로 복용',
+      chronotherapyTip: '규칙적인 복약 시간을 준수할 때 약효 유지율이 최고조에 이릅니다.',
       status: { morning: 'pending' }
     },
     {

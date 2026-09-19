@@ -487,6 +487,7 @@
 
       <form id="manualAddForm">
         <div class="modal-body">
+          <input type="hidden" id="manualEditMedId" value="">
           <div class="form-group">
             <label for="manualMedName" class="input-label required">약물명</label>
             <input type="text" id="manualMedName" class="form-input" placeholder="예: 타이레놀정, 오메가3, 노바스크" required>
@@ -545,8 +546,8 @@
 
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" id="cancelManualAddBtn">취소</button>
-          <button type="submit" class="btn btn-primary">
-            <span>스케줄에 등록하기</span>
+          <button type="submit" class="btn btn-primary" id="submitManualMedBtn">
+            <span id="submitManualMedBtnText">스케줄에 등록하기</span>
           </button>
         </div>
       </form>

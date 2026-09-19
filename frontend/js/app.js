@@ -566,6 +566,9 @@
                 <span>복용 취소</span>
               </button>
             `}
+            <button type="button" class="card-icon-btn" title="약물 정보 수정" data-action="edit" data-id="${med.id}" aria-label="${escapeHtml(med.name)} 수정">
+              ✏️
+            </button>
             <button type="button" class="card-icon-btn" title="약물 삭제" data-action="delete" data-id="${med.id}" aria-label="${escapeHtml(med.name)} 삭제">
               🗑️
             </button>
@@ -746,6 +749,38 @@
       updateCountdown();
       showToast('삭제 완료', `${med.name}이(가) 스케줄에서 삭제되었습니다.`, 'info');
     }
+  }
+
+  function openEditMedicationModal(medId) {
+    const med = state.medications.find(m => m.id === medId);
+    if (!med) return;
+
+    const editIdInput = document.getElementById('manualEditMedId');
+    const titleEl = document.getElementById('manualModalTitle');
+    const btnTextEl = document.getElementById('submitManualMedBtnText');
+
+    if (editIdInput) editIdInput.value = med.id;
+    if (titleEl) titleEl.textContent = '약물 정보 수정';
+    if (btnTextEl) btnTextEl.textContent = '수정사항 저장하기';
+
+    const nameInput = document.getElementById('manualMedName');
+    const dosageInput = document.getElementById('manualDosage');
+    const categoryInput = document.getElementById('manualCategory');
+    const mealInput = document.getElementById('manualMealRelation');
+    const instructInput = document.getElementById('manualInstructions');
+
+    if (nameInput) nameInput.value = med.name || '';
+    if (dosageInput) dosageInput.value = med.dosage || '';
+    if (categoryInput) categoryInput.value = med.category || '';
+    if (mealInput) mealInput.value = med.mealRelation || '식후 30분';
+    if (instructInput) instructInput.value = med.instructions || '';
+
+    // Set time slots checkboxes
+    document.querySelectorAll('input[name="timeSlots"]').forEach(cb => {
+      cb.checked = (med.slots || []).includes(cb.value);
+    });
+
+    openModal('manualAddModal');
   }
 
   /* ==========================================================================
@@ -1113,9 +1148,18 @@
       });
     }
 
-    // Quick Tool Buttons
     document.getElementById('openScannerBtn')?.addEventListener('click', () => openModal('prescriptionModal'));
-    document.getElementById('openManualAddBtn')?.addEventListener('click', () => openModal('manualAddModal'));
+    document.getElementById('openManualAddBtn')?.addEventListener('click', () => {
+      const editIdInput = document.getElementById('manualEditMedId');
+      const titleEl = document.getElementById('manualModalTitle');
+      const btnTextEl = document.getElementById('submitManualMedBtnText');
+      const manualForm = document.getElementById('manualAddForm');
+      if (editIdInput) editIdInput.value = '';
+      if (titleEl) titleEl.textContent = '약물 직접 추가';
+      if (btnTextEl) btnTextEl.textContent = '스케줄에 등록하기';
+      if (manualForm) manualForm.reset();
+      openModal('manualAddModal');
+    });
     document.getElementById('openDurModalBtn')?.addEventListener('click', () => {
       renderDURInspectionModal();
       openModal('durModal');
@@ -1167,6 +1211,7 @@
 
       if (action === 'take') takeMedication(medId, slot);
       else if (action === 'undo') undoTakeMedication(medId, slot);
+      else if (action === 'edit') openEditMedicationModal(medId);
       else if (action === 'delete') deleteMedication(medId);
     });
 
@@ -1239,11 +1284,12 @@
       });
     });
 
-    // Manual Add Form
+    // Manual Add / Edit Form
     const manualForm = document.getElementById('manualAddForm');
     if (manualForm) {
       manualForm.addEventListener('submit', (e) => {
         e.preventDefault();
+        const editId = document.getElementById('manualEditMedId')?.value;
         const name = document.getElementById('manualMedName').value.trim();
         const dosage = document.getElementById('manualDosage').value.trim();
         const category = document.getElementById('manualCategory').value.trim();
@@ -1260,24 +1306,46 @@
           return;
         }
 
-        const newMed = {
-          id: `med-manual-${Date.now()}`,
-          name,
-          dosage,
-          category: category || '일반 처방약',
-          slots: selectedSlots,
-          mealRelation,
-          instructions: instructions || '정해진 용법을 준수하세요.',
-          status: {}
-        };
+        if (editId) {
+          // Editing existing medication
+          const existingMed = state.medications.find(m => m.id === editId);
+          if (existingMed) {
+            existingMed.name = name;
+            existingMed.dosage = dosage;
+            existingMed.category = category || '일반 처방약';
+            existingMed.slots = selectedSlots;
+            existingMed.mealRelation = mealRelation;
+            existingMed.instructions = instructions || '정해진 용법을 준수하세요.';
+          }
+          const editIdInput = document.getElementById('manualEditMedId');
+          if (editIdInput) editIdInput.value = '';
+          saveLocalState();
+          renderTimeline();
+          updateCountdown();
+          manualForm.reset();
+          closeModal('manualAddModal');
+          showToast('수정 완료', `'${name}' 약물 정보가 성공적으로 수정되었습니다.`, 'success');
+        } else {
+          // Adding new medication
+          const newMed = {
+            id: `med-manual-${Date.now()}`,
+            name,
+            dosage,
+            category: category || '일반 처방약',
+            slots: selectedSlots,
+            mealRelation,
+            instructions: instructions || '정해진 용법을 준수하세요.',
+            status: {}
+          };
 
-        state.medications.push(newMed);
-        saveLocalState();
-        renderTimeline();
-        updateCountdown();
-        manualForm.reset();
-        closeModal('manualAddModal');
-        showToast('약물 등록 완료', `${name}이(가) 복약 스케줄에 등록되었습니다.`, 'success');
+          state.medications.push(newMed);
+          saveLocalState();
+          renderTimeline();
+          updateCountdown();
+          manualForm.reset();
+          closeModal('manualAddModal');
+          showToast('약물 등록 완료', `${name}이(가) 복약 스케줄에 등록되었습니다.`, 'success');
+        }
       });
     }
 
